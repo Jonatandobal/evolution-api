@@ -11,6 +11,13 @@ WORKDIR /evolution
 
 COPY ./package.json ./tsconfig.json ./
 
+# Añadido: Verificar contenido del directorio después de copiar los archivos iniciales
+RUN ls -la
+
+COPY ./runWithProvider.js ./
+# Añadido: Verificar que runWithProvider.js se haya copiado correctamente
+RUN ls -la && echo "Verificando runWithProvider.js:" && cat runWithProvider.js | head -5
+
 RUN npm install
 
 COPY ./src ./src
@@ -18,15 +25,11 @@ COPY ./public ./public
 COPY ./prisma ./prisma
 COPY ./manager ./manager
 COPY ./.env.example ./.env
-COPY ./runWithProvider.js ./
 COPY ./tsup.config.ts ./
-
 COPY ./Docker ./Docker
 
 RUN chmod +x ./Docker/scripts/* && dos2unix ./Docker/scripts/*
-
 RUN ./Docker/scripts/generate_database.sh
-
 RUN npm run build
 
 FROM node:20-alpine AS final
@@ -40,7 +43,6 @@ WORKDIR /evolution
 
 COPY --from=builder /evolution/package.json ./package.json
 COPY --from=builder /evolution/package-lock.json ./package-lock.json
-
 COPY --from=builder /evolution/node_modules ./node_modules
 COPY --from=builder /evolution/dist ./dist
 COPY --from=builder /evolution/prisma ./prisma
