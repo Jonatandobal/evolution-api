@@ -20,7 +20,6 @@
     "db:migrate:dev:win": "node runWithProvider.js \\\"xcopy /E /I prisma\\\\DATABASE_PROVIDER-migrations prisma\\\\migrations && npx prisma migrate dev --schema prisma\\\\DATABASE_PROVIDER-schema.prisma\\\"",
     "postinstall": "npm run db:generate && npm run db:deploy"
   }
-}
   "keywords": [
     "chat",
     "communication",
