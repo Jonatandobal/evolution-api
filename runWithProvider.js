@@ -11,7 +11,7 @@ WORKDIR /evolution
 
 COPY ./package.json ./tsconfig.json ./
 
-# Añadir el archivo runWithProvider.js directamente en el contenedor
+# Crear el archivo runWithProvider.js con el contenido JavaScript correcto
 RUN echo 'const dotenv = require("dotenv");
 const { execSync } = require("child_process");
 const { existsSync } = require("fs");
@@ -46,12 +46,18 @@ try {
 } catch (error) {
   console.error(`Error executing command: ${command}`);
   process.exit(1);
-}' > runWithProvider.js
+}' > /evolution/runWithProvider.js
 
-# Verificar que el archivo se creó correctamente
-RUN ls -la && echo "Verificando runWithProvider.js:" && cat runWithProvider.js | head -5
+# Verificar el contenido del archivo
+RUN cat /evolution/runWithProvider.js
 
-# Copiar el resto de los archivos
+# Modificar el package.json para arreglar las comillas en los scripts
+RUN sed -i 's/"db:generate": "node runWithProvider.js \\"/"db:generate": "node runWithProvider.js "/g' package.json && \
+    sed -i 's/"db:deploy": "node runWithProvider.js \\"/"db:deploy": "node runWithProvider.js "/g' package.json
+
+# Verificar los cambios en package.json
+RUN cat package.json | grep db:
+
 COPY ./src ./src
 COPY ./public ./public
 COPY ./prisma ./prisma
@@ -60,10 +66,6 @@ COPY ./.env.example ./.env
 COPY ./tsup.config.ts ./
 COPY ./Docker ./Docker
 
-# Verificar los archivos de esquema de Prisma
-RUN find ./prisma -name "*-schema.prisma" -type f
-
-# Instalar dependencias
 RUN npm install
 
 RUN chmod +x ./Docker/scripts/* && dos2unix ./Docker/scripts/*
